@@ -420,7 +420,6 @@ body{font-family:'Nunito',system-ui,sans-serif;color:var(--ink);}
     gap: 0;
     max-width: 1200px;
     margin: 0 auto;
-    min-height: calc(100vh - 180px);
   }
 
   /* Sidebar on desktop */
@@ -430,9 +429,12 @@ body{font-family:'Nunito',system-ui,sans-serif;color:var(--ink);}
     padding: 20px 16px;
     border-right: 1px solid #333;
     position: sticky;
-    top: 180px;
-    height: calc(100vh - 180px);
+    top: 0;
+    height: 100vh;
     overflow-y: auto;
+    align-self: start;
+    pointer-events: auto;
+    z-index: 10;
   }
   .sidebar-title {
     font-family: 'Cinzel', serif;
@@ -1165,18 +1167,21 @@ function buildSysUI(containerId, counts) {
     </div>`;
   }).join('');
 
-  // Event delegation on container
-  el.onclick = function(e) {
+  // Remove old listener and add fresh one
+  const newEl = el.cloneNode(true);
+  el.parentNode.replaceChild(newEl, el);
+  newEl.addEventListener('click', function(e) {
     const item = e.target.closest('.filter-item');
     if(!item) return;
     const id = item.dataset.sys;
     if(activeSys.has(id)) activeSys.delete(id);
     else activeSys.add(id);
-    item.classList.toggle('active', activeSys.has(id));
-    // Sync the other instance
+    newEl.querySelectorAll('.filter-item').forEach(fi => {
+      fi.classList.toggle('active', activeSys.has(fi.dataset.sys));
+    });
     syncOtherSys(containerId, id);
     reRender();
-  };
+  });
 }
 
 function buildDayUI(containerId) {
@@ -1188,28 +1193,36 @@ function buildDayUI(containerId) {
     return `<span class="day-pill${isActive?' active':''}" data-day="${dayVal}">${d}</span>`;
   }).join('');
 
-  el.onclick = function(e) {
+  const newEl2 = el.cloneNode(true);
+  el.parentNode.replaceChild(newEl2, el);
+  newEl2.addEventListener('click', function(e) {
     const pill = e.target.closest('.day-pill');
     if(!pill) return;
     const day = parseInt(pill.dataset.day);
     if(activeDays.has(day)) activeDays.delete(day);
     else activeDays.add(day);
-    pill.classList.toggle('active', activeDays.has(day));
+    newEl2.querySelectorAll('.day-pill').forEach(p => {
+      p.classList.toggle('active', activeDays.has(parseInt(p.dataset.day)));
+    });
     syncOtherDay(containerId, day);
     reRender();
-  };
+  });
 }
 
 function syncOtherSys(sourceId, sysId) {
-  const otherId = sourceId === 'sidebarSysFilters' ? 'mobileSysFilters' : 'sidebarSysFilters';
-  const other = document.querySelector(`#${otherId} [data-sys="${sysId}"]`);
-  if(other) other.classList.toggle('active', activeSys.has(sysId));
+  try {
+    const otherId = sourceId === 'sidebarSysFilters' ? 'mobileSysFilters' : 'sidebarSysFilters';
+    const other = document.querySelector('#'+otherId+' [data-sys="'+sysId+'"]');
+    if(other) other.classList.toggle('active', activeSys.has(sysId));
+  } catch(e) {}
 }
 
 function syncOtherDay(sourceId, day) {
-  const otherId = sourceId === 'sidebarDayFilters' ? 'mobileDayFilters' : 'sidebarDayFilters';
-  const other = document.querySelector(`#${otherId} [data-day="${day}"]`);
-  if(other) other.classList.toggle('active', activeDays.has(day));
+  try {
+    const otherId = sourceId === 'sidebarDayFilters' ? 'mobileDayFilters' : 'sidebarDayFilters';
+    const other = document.querySelector('#'+otherId+' [data-day="'+day+'"]');
+    if(other) other.classList.toggle('active', activeDays.has(day));
+  } catch(e) {}
 }
 
 function updateFilterCounts(counts) {
