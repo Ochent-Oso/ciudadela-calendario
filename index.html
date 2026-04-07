@@ -532,6 +532,148 @@ body{font-family:'Nunito',system-ui,sans-serif;color:var(--ink);}
   .agenda-grid { display: block; }
 }
 
+
+/* ── FILTERS ─────────────────────────────────────────── */
+.filter-section { margin-bottom: 24px; }
+.filter-item {
+  display: flex; align-items: center; gap: 8px;
+  padding: 6px 8px; cursor: pointer; border-radius: 4px;
+  transition: background .12s; user-select: none;
+}
+.filter-item:hover { background: #222; }
+.filter-item.active { background: #2a2010; }
+.filter-item input[type=checkbox] { display: none; }
+.filter-check {
+  width: 14px; height: 14px; border: 1.5px solid #555;
+  border-radius: 2px; flex-shrink: 0;
+  display: flex; align-items: center; justify-content: center;
+  transition: all .12s;
+}
+.filter-item.active .filter-check {
+  background: var(--gold2); border-color: var(--gold2);
+}
+.filter-check::after {
+  content: ''; display: none;
+  width: 8px; height: 5px;
+  border-left: 2px solid #111; border-bottom: 2px solid #111;
+  transform: rotate(-45deg) translateY(-1px);
+}
+.filter-item.active .filter-check::after { display: block; }
+.filter-label {
+  font-family: 'Nunito', sans-serif;
+  font-size: 13px; color: #ccc; flex: 1;
+}
+.filter-item.active .filter-label { color: #fff; }
+.filter-count {
+  font-family: 'Cinzel', serif; font-size: 9px;
+  color: #666; min-width: 16px; text-align: right;
+}
+.filter-item.active .filter-count { color: var(--gold2); }
+
+.filter-dot {
+  width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0;
+}
+
+.filter-clear {
+  font-family: 'Cinzel', serif; font-size: 8px;
+  letter-spacing: .1em; text-transform: uppercase;
+  color: #666; cursor: pointer; padding: 4px 0;
+  border: none; background: transparent; display: block;
+  margin-top: 4px; transition: color .12s;
+}
+.filter-clear:hover { color: var(--gold2); }
+
+/* Day filter pills */
+.day-pills { display: flex; flex-wrap: wrap; gap: 4px; margin-top: 6px; }
+.day-pill {
+  font-family: 'Cinzel', serif; font-size: 9px;
+  letter-spacing: .08em; text-transform: uppercase;
+  padding: 4px 9px; border: 1px solid #444;
+  border-radius: 2px; cursor: pointer; color: #888;
+  background: transparent; transition: all .12s; user-select: none;
+}
+.day-pill:hover { border-color: #888; color: #ccc; }
+.day-pill.active { background: var(--gold2); border-color: var(--gold2); color: #111; font-weight: 700; }
+
+/* Mobile filter panel */
+.mobile-filter-bar {
+  display: none;
+  background: #1a1208;
+  padding: 8px 14px;
+  gap: 8px;
+  align-items: center;
+  border-bottom: 1px solid #333;
+  position: sticky; top: 0; z-index: 40;
+}
+.mobile-filter-btn {
+  font-family: 'Cinzel', serif; font-size: 9px;
+  letter-spacing: .1em; text-transform: uppercase;
+  background: transparent; border: 1px solid var(--gold2);
+  color: var(--gold2); padding: 7px 14px; cursor: pointer;
+  display: flex; align-items: center; gap: 6px;
+  transition: all .15s;
+}
+.mobile-filter-btn:hover, .mobile-filter-btn.has-active {
+  background: var(--gold2); color: #111;
+}
+.mobile-filter-badge {
+  background: var(--red); color: #fff;
+  border-radius: 50%; width: 16px; height: 16px;
+  font-size: 9px; display: none;
+  align-items: center; justify-content: center;
+}
+.mobile-filter-badge.show { display: flex; }
+
+.filter-panel {
+  display: none;
+  background: #111;
+  border-bottom: 2px solid var(--gold2);
+  padding: 14px;
+}
+.filter-panel.open { display: block; }
+.filter-panel-grid {
+  display: grid; grid-template-columns: 1fr 1fr; gap: 16px;
+}
+.filter-panel-title {
+  font-family: 'Cinzel', serif; font-size: 10px;
+  letter-spacing: .14em; text-transform: uppercase;
+  color: var(--gold2); margin-bottom: 8px;
+}
+.filter-panel .filter-item {
+  padding: 5px 6px;
+}
+.filter-panel .filter-label { font-size: 12px; }
+.filter-panel .day-pill { font-size: 8px; padding: 3px 7px; }
+.filter-panel-actions {
+  display: flex; justify-content: flex-end; gap: 8px; margin-top: 12px;
+  border-top: 1px solid #333; padding-top: 12px;
+}
+.filter-apply {
+  font-family: 'Cinzel', serif; font-size: 9px;
+  letter-spacing: .1em; text-transform: uppercase;
+  background: var(--gold2); border: none; color: #111;
+  padding: 7px 16px; cursor: pointer;
+}
+.filter-reset {
+  font-family: 'Cinzel', serif; font-size: 9px;
+  letter-spacing: .1em; text-transform: uppercase;
+  background: transparent; border: 1px solid #555; color: #888;
+  padding: 7px 14px; cursor: pointer; transition: all .12s;
+}
+.filter-reset:hover { border-color: #aaa; color: #ccc; }
+
+/* Active filter indicator in agenda */
+.filter-active-bar {
+  background: #2a2010; border-bottom: 1px solid #c4a030;
+  padding: 6px 16px; font-family: 'Nunito', sans-serif;
+  font-size: 12px; color: #c4a030; display: none;
+}
+.filter-active-bar.show { display: block; }
+
+@media (max-width: 767px) {
+  .mobile-filter-bar { display: flex; }
+}
+
 </style>
 </head>
 <body>
@@ -556,35 +698,70 @@ body{font-family:'Nunito',system-ui,sans-serif;color:var(--ink);}
     <button class="view-tab" data-view="month">Mes</button>
   </div>
 </header>
+<!-- Mobile filter bar -->
+<div class="mobile-filter-bar">
+  <button class="mobile-filter-btn" id="mobileFilterBtn">
+    ⚔ Filtros
+    <span class="mobile-filter-badge" id="filterBadge">0</span>
+  </button>
+  <span id="mobileActiveLabel" style="font-family:Nunito,sans-serif;font-size:11px;color:#c4a030;flex:1;"></span>
+</div>
+
+<!-- Mobile filter panel -->
+<div class="filter-panel" id="mobileFilterPanel">
+  <div class="filter-panel-grid">
+    <div>
+      <div class="filter-panel-title">Sistema</div>
+      <div id="mobileSysFilters"></div>
+    </div>
+    <div>
+      <div class="filter-panel-title">Día de la semana</div>
+      <div class="day-pills" id="mobileDayFilters"></div>
+    </div>
+  </div>
+  <div class="filter-panel-actions">
+    <button class="filter-reset" id="mobileResetBtn">Limpiar</button>
+    <button class="filter-apply" id="mobileApplyBtn">Aplicar ✦</button>
+  </div>
+</div>
+
 
 <div class="page-layout">
 
   <!-- SIDEBAR (desktop only) -->
   <aside class="sidebar">
-    <div class="sidebar-legend">
-      <div class="sidebar-title">Sistemas</div>
-      <div class="legend-item"><div class="legend-dot" style="background:#7a1515"></div>&nbsp;D&D 5e</div>
-      <div class="legend-item"><div class="legend-dot" style="background:#7a4a0a"></div>&nbsp;D&D 5.5e</div>
-      <div class="legend-item"><div class="legend-dot" style="background:#1a4a8a"></div>&nbsp;Pathfinder</div>
-      <div class="legend-item"><div class="legend-dot" style="background:#4a1a5a"></div>&nbsp;Vampiro</div>
-      <div class="legend-item"><div class="legend-dot" style="background:#1a4a1a"></div>&nbsp;Hombre Lobo</div>
-      <div class="legend-item"><div class="legend-dot" style="background:#1a1a6a"></div>&nbsp;Mago</div>
-      <div class="legend-item"><div class="legend-dot" style="background:#6a3a0a"></div>&nbsp;Hunter</div>
-      <div class="legend-item"><div class="legend-dot" style="background:#555"></div>&nbsp;Otro sistema</div>
+
+    <!-- Sistema filter -->
+    <div class="filter-section">
+      <div class="sidebar-title">Filtrar por sistema</div>
+      <div id="sidebarSysFilters"></div>
+      <button class="filter-clear" id="sidebarClearSys">Mostrar todos</button>
     </div>
+
+    <!-- Día de la semana filter -->
+    <div class="filter-section">
+      <div class="sidebar-title">Filtrar por día</div>
+      <div class="day-pills" id="sidebarDayFilters"></div>
+      <button class="filter-clear" id="sidebarClearDays">Todos los días</button>
+    </div>
+
+    <!-- Stats -->
     <div class="sidebar-stats">
-      <div class="sidebar-title">Este período</div>
+      <div class="sidebar-title">Mostrando</div>
       <div class="stat-row"><span>Mesas</span><span class="stat-num" id="statMesas">—</span></div>
-      <div class="stat-row"><span>Días con actividad</span><span class="stat-num" id="statDias">—</span></div>
+      <div class="stat-row"><span>Días</span><span class="stat-num" id="statDias">—</span></div>
     </div>
+
     <div class="sidebar-info">
       <div class="sidebar-title">La Ciudadela</div>
       Lima 575, CABA<br>
       <a href="https://instagram.com/laciudadela.dlc" target="_blank">@laciudadela.dlc</a>
     </div>
+
   </aside>
 
   <!-- MAIN CONTENT -->
+  <div id="filterActiveBar" class="filter-active-bar"></div>
   <div class="main" id="agendaBody">
     <div class="agenda-loading">Convocando a los dados... ✦</div>
   </div>
@@ -809,8 +986,16 @@ function renderAgenda(evs){
     cur.setDate(cur.getDate()+1);
   }
 
-  // Filter events to range
-  const rangeEvs=evs.filter(e=>e.date>=start&&e.date<=end);
+  // Filter events to range, then apply user filters
+  const rangeEvs=applyFilters(evs.filter(e=>e.date>=start&&e.date<=end));
+
+  // Build/refresh filter UI with counts from RANGE (before user filter)
+  const rangeAll=evs.filter(e=>e.date>=start&&e.date<=end);
+  const counts=countsBySys(rangeAll);
+  buildSidebarFilters(counts);
+  buildSidebarDays();
+  buildMobileFilters(counts);
+  updateFilterBadge();
 
   if(rangeEvs.length===0){
     body.innerHTML='<div class="agenda-empty">✦ No hay mesas programadas para este período ✦</div>';
@@ -926,6 +1111,151 @@ document.querySelectorAll('.view-tab').forEach(btn=>{
 });
 
 loadAndRender();
+
+// ── FILTER STATE ──────────────────────────────────────
+const SYSTEMS = [
+  {id:'dnd',  label:'D&D 5e',       dot:'#7a1515'},
+  {id:'d55',  label:'D&D 5.5e',     dot:'#7a4a0a'},
+  {id:'pf',   label:'Pathfinder',   dot:'#1a4a8a'},
+  {id:'vam',  label:'Vampiro',      dot:'#4a1a5a'},
+  {id:'hw',   label:'Hombre Lobo',  dot:'#1a4a1a'},
+  {id:'mag',  label:'Mago',         dot:'#1a1a6a'},
+  {id:'hun',  label:'Hunter',       dot:'#6a3a0a'},
+  {id:'oth',  label:'Otro',         dot:'#555'},
+];
+const DAYS = ['Lun','Mar','Mié','Jue','Vie','Sáb','Dom'];
+const DAYS_IDX = [1,2,3,4,5,6,0]; // Mon=1...Sun=0 in JS
+
+let activeSys  = new Set(); // empty = all
+let activeDays = new Set(); // empty = all
+
+function countsBySys(evs) {
+  const c = {};
+  SYSTEMS.forEach(s => c[s.id] = 0);
+  evs.forEach(e => { if(c[e.sys]!==undefined) c[e.sys]++; else c['oth']++; });
+  return c;
+}
+
+function applyFilters(evs) {
+  return evs.filter(e => {
+    const sysOk = activeSys.size === 0 || activeSys.has(e.sys);
+    const dayOk = activeDays.size === 0 || activeDays.has(e.date.getDay());
+    return sysOk && dayOk;
+  });
+}
+
+function updateFilterBadge() {
+  const total = activeSys.size + activeDays.size;
+  const badge = document.getElementById('filterBadge');
+  const btn   = document.getElementById('mobileFilterBtn');
+  const lbl   = document.getElementById('mobileActiveLabel');
+  const bar   = document.getElementById('filterActiveBar');
+  if(badge) {
+    badge.textContent = total;
+    badge.classList.toggle('show', total > 0);
+  }
+  if(btn) btn.classList.toggle('has-active', total > 0);
+
+  // Active label
+  const parts = [];
+  if(activeSys.size)  parts.push(SYSTEMS.filter(s=>activeSys.has(s.id)).map(s=>s.label).join(', '));
+  if(activeDays.size) parts.push(DAYS.filter((_,i)=>activeDays.has(DAYS_IDX[i])).join(', '));
+  const txt = parts.join(' · ');
+  if(lbl) lbl.textContent = txt;
+  if(bar) {
+    bar.textContent = total ? 'Filtrando: '+txt : '';
+    bar.classList.toggle('show', total > 0);
+  }
+}
+
+// Build sidebar sys filters
+function buildSidebarFilters(counts) {
+  const wrap = document.getElementById('sidebarSysFilters');
+  if(!wrap) return;
+  wrap.innerHTML = SYSTEMS.map(s => {
+    const active = activeSys.has(s.id) ? ' active' : '';
+    return `<div class="filter-item${active}" data-sys="${s.id}" onclick="toggleSys('${s.id}','sidebar')">
+      <div class="filter-dot" style="background:${s.dot}"></div>
+      <span class="filter-label">${s.label}</span>
+      <span class="filter-count">${counts[s.id]||0}</span>
+      <div class="filter-check"></div>
+    </div>`;
+  }).join('');
+}
+
+function buildSidebarDays() {
+  const wrap = document.getElementById('sidebarDayFilters');
+  if(!wrap) return;
+  wrap.innerHTML = DAYS.map((d,i) => {
+    const active = activeDays.has(DAYS_IDX[i]) ? ' active' : '';
+    return `<span class="day-pill${active}" data-day="${DAYS_IDX[i]}" onclick="toggleDay(${DAYS_IDX[i]},'sidebar')">${d}</span>`;
+  }).join('');
+}
+
+function buildMobileFilters(counts) {
+  const swrap = document.getElementById('mobileSysFilters');
+  if(swrap) swrap.innerHTML = SYSTEMS.map(s => {
+    const active = activeSys.has(s.id) ? ' active' : '';
+    return `<div class="filter-item${active}" data-sys="${s.id}" onclick="toggleSys('${s.id}','mobile')">
+      <div class="filter-dot" style="background:${s.dot}"></div>
+      <span class="filter-label">${s.label}</span>
+      <span class="filter-count">${counts[s.id]||0}</span>
+      <div class="filter-check"></div>
+    </div>`;
+  }).join('');
+
+  const dwrap = document.getElementById('mobileDayFilters');
+  if(dwrap) dwrap.innerHTML = DAYS.map((d,i) => {
+    const active = activeDays.has(DAYS_IDX[i]) ? ' active' : '';
+    return `<span class="day-pill${active}" data-day="${DAYS_IDX[i]}" onclick="toggleDay(${DAYS_IDX[i]},'mobile')">${d}</span>`;
+  }).join('');
+}
+
+function toggleSys(id, ctx) {
+  if(activeSys.has(id)) activeSys.delete(id);
+  else activeSys.add(id);
+  syncFiltersAndRender(ctx);
+}
+
+function toggleDay(day, ctx) {
+  if(activeDays.has(day)) activeDays.delete(day);
+  else activeDays.add(day);
+  syncFiltersAndRender(ctx);
+}
+
+function syncFiltersAndRender(ctx) {
+  updateFilterBadge();
+  // Rebuild both UIs to stay in sync
+  const counts = countsBySys(allLoadedEvents);
+  buildSidebarFilters(counts);
+  buildSidebarDays();
+  buildMobileFilters(counts);
+  // Re-render agenda with filters
+  renderAgenda(allLoadedEvents);
+}
+
+// Mobile panel toggle
+const mobileBtn = document.getElementById('mobileFilterBtn');
+const mobilePanel = document.getElementById('mobileFilterPanel');
+if(mobileBtn) mobileBtn.addEventListener('click', () => {
+  mobilePanel.classList.toggle('open');
+});
+
+document.getElementById('mobileApplyBtn')?.addEventListener('click', () => {
+  mobilePanel.classList.remove('open');
+});
+document.getElementById('mobileResetBtn')?.addEventListener('click', () => {
+  activeSys.clear(); activeDays.clear();
+  syncFiltersAndRender('mobile');
+  mobilePanel.classList.remove('open');
+});
+document.getElementById('sidebarClearSys')?.addEventListener('click', () => {
+  activeSys.clear(); syncFiltersAndRender('sidebar');
+});
+document.getElementById('sidebarClearDays')?.addEventListener('click', () => {
+  activeDays.clear(); syncFiltersAndRender('sidebar');
+});
+
 </script>
 </body>
 </html>
