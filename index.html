@@ -763,9 +763,11 @@ body{font-family:'Nunito',system-ui,sans-serif;color:var(--ink);}
   </aside>
 
   <!-- MAIN CONTENT -->
-  <div id="filterActiveBar" class="filter-active-bar"></div>
   <div class="main" id="agendaBody">
-    <div class="agenda-loading">Convocando a los dados... ✦</div>
+    <div id="filterActiveBar" class="filter-active-bar"></div>
+    <div id="agendaContent">
+      <div class="agenda-loading">Convocando a los dados... ✦</div>
+    </div>
   </div>
 
 </div>
@@ -978,7 +980,7 @@ document.getElementById('modalOverlay').onclick=function(e){if(e.target===this)t
 // ── RENDER ────────────────────────────────────────────
 function renderAgenda(evs){
   const {start,end}=getDateRange();
-  const body=document.getElementById('agendaBody');
+  const body=document.getElementById('agendaContent');
 
   // Build list of days in range
   const days=[];
@@ -1062,7 +1064,7 @@ function renderAgenda(evs){
 // ── LOAD ──────────────────────────────────────────────
 async function loadAndRender(){
   updatePeriodLabel();
-  document.getElementById('agendaBody').innerHTML='<div class="agenda-loading">Convocando a los dados... ✦</div>';
+  document.getElementById('agendaContent').innerHTML='<div class="agenda-loading">Convocando a los dados... ✦</div>';
   try{
     const {start,end}=getDateRange();
     // Fetch months needed
