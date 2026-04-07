@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>La Ciudadela de los Confines — Agenda</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;700;900&family=Cinzel+Decorative:wght@700&family=IM+Fell+English:ital@0;1&family=Special+Elite&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;700;900&family=Cinzel+Decorative:wght@700&family=Nunito:wght@400;600;700&display=swap" rel="stylesheet">
 <style>
 *{box-sizing:border-box;margin:0;padding:0;}
 :root{
@@ -24,7 +24,7 @@
   --header-bg:#1a1208;
 }
 html,body{min-height:100%;background:#1a1208;}
-body{font-family:'IM Fell English',Georgia,serif;color:var(--ink);}
+body{font-family:'Nunito',system-ui,sans-serif;color:var(--ink);}
 
 /* ── HEADER ──────────────────────────────────────────── */
 .site-header{
@@ -155,7 +155,7 @@ body{font-family:'IM Fell English',Georgia,serif;color:var(--ink);}
 .agenda-loading{
   padding:40px 20px;
   text-align:center;
-  font-family:'IM Fell English',serif;
+  font-family:'Nunito',sans-serif;
   font-style:italic;
   font-size:16px;
   color:var(--muted);
@@ -163,7 +163,7 @@ body{font-family:'IM Fell English',Georgia,serif;color:var(--ink);}
 .agenda-empty{
   padding:32px 20px;
   text-align:center;
-  font-family:'IM Fell English',serif;
+  font-family:'Nunito',sans-serif;
   font-style:italic;
   font-size:15px;
   color:var(--muted);
@@ -189,7 +189,7 @@ body{font-family:'IM Fell English',Georgia,serif;color:var(--ink);}
   color:#fff;
 }
 .day-date{
-  font-family:'IM Fell English',serif;
+  font-family:'Nunito',sans-serif;
   font-size:13px;
   color:var(--gold2);
 }
@@ -218,7 +218,7 @@ body{font-family:'IM Fell English',Georgia,serif;color:var(--ink);}
 .mesa-title{
   font-family:'Cinzel',serif;
   font-weight:700;
-  font-size:15px;
+  font-size:16px;
   color:var(--ink);
   line-height:1.3;
   flex:1;
@@ -244,7 +244,7 @@ body{font-family:'IM Fell English',Georgia,serif;color:var(--ink);}
   display:flex;
   align-items:center;
   gap:4px;
-  font-family:'Special Elite',monospace;
+  font-family:'Nunito',sans-serif;
   font-size:11px;
   color:var(--ink2);
 }
@@ -256,8 +256,8 @@ body{font-family:'IM Fell English',Georgia,serif;color:var(--ink);}
   color:var(--muted);
 }
 .mesa-sinopsis{
-  font-family:'IM Fell English',serif;
-  font-style:italic;
+  font-family:'Nunito',sans-serif;
+  font-style:normal;
   font-size:13px;
   color:var(--ink2);
   line-height:1.5;
@@ -272,7 +272,7 @@ body{font-family:'IM Fell English',Georgia,serif;color:var(--ink);}
   margin-top:10px;
 }
 .mesa-horario{
-  font-family:'Special Elite',monospace;
+  font-family:'Nunito',sans-serif;
   font-size:13px;
   font-weight:bold;
   color:var(--ink);
@@ -359,7 +359,7 @@ body{font-family:'IM Fell English',Georgia,serif;color:var(--ink);}
   color:var(--muted);min-width:80px;padding-top:2px;
 }
 .modal-val{
-  font-family:'IM Fell English',serif;
+  font-family:'Nunito',sans-serif;
   font-size:14px;color:var(--ink);line-height:1.4;
 }
 .modal-actions{
@@ -403,6 +403,135 @@ body{font-family:'IM Fell English',Georgia,serif;color:var(--ink);}
   font-family:'Cinzel',serif;font-size:9px;
   letter-spacing:.12em;text-transform:uppercase;color:#8a6a3a;
 }
+
+/* ── DESKTOP LAYOUT (≥ 768px) ───────────────────────── */
+@media (min-width: 768px) {
+  body { background: #1a1208; }
+
+  .site-header {
+    position: sticky;
+    top: 0;
+    z-index: 50;
+  }
+
+  .page-layout {
+    display: grid;
+    grid-template-columns: 280px 1fr;
+    gap: 0;
+    max-width: 1200px;
+    margin: 0 auto;
+    min-height: calc(100vh - 180px);
+  }
+
+  /* Sidebar on desktop */
+  .sidebar {
+    background: #111;
+    color: #eee;
+    padding: 20px 16px;
+    border-right: 1px solid #333;
+    position: sticky;
+    top: 180px;
+    height: calc(100vh - 180px);
+    overflow-y: auto;
+  }
+  .sidebar-title {
+    font-family: 'Cinzel', serif;
+    font-size: 10px;
+    letter-spacing: .16em;
+    text-transform: uppercase;
+    color: #c4a030;
+    margin-bottom: 12px;
+    padding-bottom: 8px;
+    border-bottom: 1px solid #333;
+  }
+  .sidebar-legend { margin-bottom: 24px; }
+  .sidebar-legend .legend-item {
+    font-family: 'Nunito', sans-serif;
+    font-size: 12px;
+    color: #ccc;
+    padding: 4px 0;
+    letter-spacing: normal;
+    text-transform: none;
+  }
+  .sidebar-legend .legend-dot { width: 10px; height: 10px; }
+
+  .sidebar-stats { margin-bottom: 24px; }
+  .stat-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 5px 0;
+    border-bottom: 1px solid #222;
+    font-family: 'Nunito', sans-serif;
+    font-size: 12px;
+    color: #aaa;
+  }
+  .stat-num {
+    font-family: 'Cinzel', serif;
+    font-weight: 700;
+    font-size: 15px;
+    color: #c4a030;
+  }
+
+  .sidebar-info {
+    font-family: 'Nunito', sans-serif;
+    font-size: 11px;
+    color: #888;
+    line-height: 1.6;
+  }
+  .sidebar-info a { color: #c4a030; text-decoration: none; }
+
+  /* Main content area */
+  .main {
+    max-width: none;
+    background: #fff;
+  }
+
+  /* Two-column agenda grid on desktop */
+  .agenda-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 0;
+    align-items: start;
+  }
+  .agenda-grid .day-section {
+    border-right: 1px solid #eee;
+  }
+  .agenda-grid .day-section:nth-child(even) {
+    border-right: none;
+  }
+
+  /* Bigger cards on desktop */
+  .mesa-card { padding: 16px 20px; }
+  .mesa-title { font-size: 17px; }
+  .meta-item { font-size: 13px; }
+  .mesa-sinopsis { font-size: 14px; }
+
+  /* Modal centered on desktop (not slide-up) */
+  .modal-overlay {
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+  }
+  .modal-box {
+    max-width: 520px;
+    max-height: 80vh;
+    border-radius: 4px;
+    border-top: none;
+    border: 2px solid #1a1208;
+  }
+
+  /* Legend goes to sidebar, hide bottom legend on desktop */
+  .bottom-legend { display: none; }
+}
+
+@media (max-width: 767px) {
+  .page-layout { display: block; }
+  .sidebar { display: none; }
+  .bottom-legend { display: flex; }
+  .agenda-grid { display: block; }
+}
+
 </style>
 </head>
 <body>
@@ -428,11 +557,42 @@ body{font-family:'IM Fell English',Georgia,serif;color:var(--ink);}
   </div>
 </header>
 
-<div class="main" id="agendaBody">
-  <div class="agenda-loading">Convocando a los dados... ✦</div>
+<div class="page-layout">
+
+  <!-- SIDEBAR (desktop only) -->
+  <aside class="sidebar">
+    <div class="sidebar-legend">
+      <div class="sidebar-title">Sistemas</div>
+      <div class="legend-item"><div class="legend-dot" style="background:#7a1515"></div>&nbsp;D&D 5e</div>
+      <div class="legend-item"><div class="legend-dot" style="background:#7a4a0a"></div>&nbsp;D&D 5.5e</div>
+      <div class="legend-item"><div class="legend-dot" style="background:#1a4a8a"></div>&nbsp;Pathfinder</div>
+      <div class="legend-item"><div class="legend-dot" style="background:#4a1a5a"></div>&nbsp;Vampiro</div>
+      <div class="legend-item"><div class="legend-dot" style="background:#1a4a1a"></div>&nbsp;Hombre Lobo</div>
+      <div class="legend-item"><div class="legend-dot" style="background:#1a1a6a"></div>&nbsp;Mago</div>
+      <div class="legend-item"><div class="legend-dot" style="background:#6a3a0a"></div>&nbsp;Hunter</div>
+      <div class="legend-item"><div class="legend-dot" style="background:#555"></div>&nbsp;Otro sistema</div>
+    </div>
+    <div class="sidebar-stats">
+      <div class="sidebar-title">Este período</div>
+      <div class="stat-row"><span>Mesas</span><span class="stat-num" id="statMesas">—</span></div>
+      <div class="stat-row"><span>Días con actividad</span><span class="stat-num" id="statDias">—</span></div>
+    </div>
+    <div class="sidebar-info">
+      <div class="sidebar-title">La Ciudadela</div>
+      Lima 575, CABA<br>
+      <a href="https://instagram.com/laciudadela.dlc" target="_blank">@laciudadela.dlc</a>
+    </div>
+  </aside>
+
+  <!-- MAIN CONTENT -->
+  <div class="main" id="agendaBody">
+    <div class="agenda-loading">Convocando a los dados... ✦</div>
+  </div>
+
 </div>
 
-<div class="legend">
+<!-- LEGEND mobile -->
+<div class="legend bottom-legend">
   <div class="legend-item"><div class="legend-dot" style="background:#7a1515"></div>D&amp;D 5e</div>
   <div class="legend-item"><div class="legend-dot" style="background:#7a4a0a"></div>D&amp;D 5.5e</div>
   <div class="legend-item"><div class="legend-dot" style="background:#1a4a8a"></div>Pathfinder</div>
@@ -700,7 +860,14 @@ function renderAgenda(evs){
   });
 
   if(!html) html='<div class="agenda-empty">✦ No hay mesas programadas para este período ✦</div>';
+  else html='<div class="agenda-grid">'+html+'</div>';
   body.innerHTML=html;
+
+  // Update sidebar stats
+  const statM=document.getElementById('statMesas');
+  const statD=document.getElementById('statDias');
+  if(statM) statM.textContent=rangeEvs.length;
+  if(statD) statD.textContent=new Set(rangeEvs.map(e=>e.date.toDateString())).size;
 
   document.querySelectorAll('.mesa-card').forEach(el=>{
     el.addEventListener('click',()=>openModal(el.dataset.id));
