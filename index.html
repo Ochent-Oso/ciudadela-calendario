@@ -1,0 +1,681 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>La Ciudadela de los Confines — Agenda de Mesas</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;700;900&family=Cinzel+Decorative:wght@400;700&family=IM+Fell+English:ital@0;1&display=swap" rel="stylesheet">
+<style>
+*{box-sizing:border-box;margin:0;padding:0;}
+:root{
+  --ink:#1a0f00;--parchment:#f2e8d0;--parch2:#e8dab8;--parch3:#ddd0a8;
+  --red:#7a1515;--gold:#8a6a1a;--gold2:#c4a030;
+  --brd:#3a2000;--brd2:#6a4010;--muted:#5a3a10;
+}
+html,body{height:100%;background:#2a1a08;}
+body{font-family:'IM Fell English',Georgia,serif;color:var(--ink);}
+
+/* LAYOUT */
+.page{max-width:1100px;margin:0 auto;padding:16px;}
+
+/* HEADER */
+.site-header{text-align:center;padding:24px 0 16px;color:var(--parchment);}
+.site-title{font-family:'Cinzel Decorative',serif;font-weight:700;font-size:clamp(18px,4vw,32px);letter-spacing:.08em;text-shadow:0 2px 8px rgba(0,0,0,.5);}
+.site-sub{font-family:'Cinzel',serif;font-size:clamp(8px,1.5vw,11px);letter-spacing:.22em;color:var(--gold2);text-transform:uppercase;margin-top:6px;}
+.ornament{color:var(--gold2);font-size:18px;letter-spacing:8px;display:block;margin:8px 0 0;}
+
+/* MAIN CARD */
+.cal-card{
+  background:var(--parchment);
+  border:3px solid var(--brd);
+  position:relative;
+  background-image:
+    repeating-linear-gradient(0deg,transparent,transparent 28px,rgba(139,107,40,.05) 28px,rgba(139,107,40,.05) 29px),
+    repeating-linear-gradient(90deg,transparent,transparent 28px,rgba(139,107,40,.03) 28px,rgba(139,107,40,.03) 29px);
+}
+
+/* CORNERS */
+.corner{position:absolute;width:32px;height:32px;z-index:5;pointer-events:none;}
+.c-tl{top:-3px;left:-3px;}
+.c-tr{top:-3px;right:-3px;transform:scaleX(-1);}
+.c-bl{bottom:-3px;left:-3px;transform:scaleY(-1);}
+.c-br{bottom:-3px;right:-3px;transform:scale(-1,-1);}
+.corner svg{width:32px;height:32px;}
+
+/* CAL HEADER */
+.cal-header{
+  background:var(--ink);color:var(--parchment);
+  padding:12px 16px;
+  display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px;
+  border-bottom:3px solid var(--gold2);
+}
+.cal-header::after{
+  content:'';display:block;position:absolute;
+  left:0;right:0;height:3px;
+  background:repeating-linear-gradient(90deg,var(--gold2) 0,var(--gold2) 6px,transparent 6px,transparent 10px);
+}
+.hdr-logo{font-family:'Cinzel',serif;font-weight:700;font-size:clamp(12px,2.5vw,17px);letter-spacing:.06em;text-transform:uppercase;}
+.hdr-sub{font-family:'Cinzel',serif;font-size:8px;letter-spacing:.18em;color:var(--gold2);text-transform:uppercase;margin-top:2px;}
+.month-nav{display:flex;align-items:center;gap:8px;}
+.month-label{font-family:'Cinzel',serif;font-weight:700;font-size:13px;min-width:160px;text-align:center;letter-spacing:.06em;}
+.nav-btn{
+  background:transparent;border:1px solid var(--gold2);color:var(--gold2);
+  width:26px;height:26px;cursor:pointer;font-size:14px;
+  display:flex;align-items:center;justify-content:center;
+  transition:all .15s;
+}
+.nav-btn:hover{background:var(--gold2);color:var(--ink);}
+
+/* TOOLBAR */
+.toolbar{
+  background:var(--parch2);border-bottom:2px solid var(--brd2);
+  padding:6px 16px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:6px;
+}
+.view-tabs{display:flex;border:1.5px solid var(--brd2);}
+.view-tab{
+  background:transparent;border:none;border-right:1px solid var(--brd2);
+  padding:5px 14px;font-family:'Cinzel',serif;font-size:9px;
+  letter-spacing:.12em;cursor:pointer;text-transform:uppercase;color:var(--muted);
+  transition:all .15s;
+}
+.view-tab:last-child{border-right:none;}
+.view-tab:hover{background:var(--parch3);}
+.view-tab.active{background:var(--ink);color:var(--gold2);}
+.today-btn{
+  font-family:'Cinzel',serif;font-size:9px;
+  background:transparent;border:1.5px solid var(--brd2);
+  padding:5px 12px;cursor:pointer;letter-spacing:.1em;
+  text-transform:uppercase;color:var(--muted);transition:all .15s;
+}
+.today-btn:hover{background:var(--ink);color:var(--gold2);}
+
+/* LOADING / ERROR */
+.status-msg{
+  padding:40px;text-align:center;
+  font-family:'IM Fell English',serif;font-style:italic;
+  font-size:15px;color:var(--muted);
+}
+
+/* MONTH VIEW */
+.day-headers{display:grid;grid-template-columns:repeat(7,1fr);background:var(--ink);border-bottom:2px solid var(--brd);}
+.day-hdr{
+  padding:6px 4px;text-align:center;
+  font-family:'Cinzel',serif;font-size:8px;letter-spacing:.12em;
+  text-transform:uppercase;color:var(--gold2);
+  border-right:1px solid #3a2000;
+}
+.day-hdr:last-child{border-right:none;}
+
+.month-cells{display:grid;grid-template-columns:repeat(7,1fr);}
+.month-cell{
+  min-height:86px;border-right:1px solid var(--brd2);border-bottom:1px solid var(--brd2);
+  padding:4px;cursor:pointer;transition:background .12s;
+}
+.month-cell:nth-child(7n){border-right:none;}
+.month-cell:hover{background:var(--parch3);}
+.month-cell.other-month{opacity:.38;background:var(--parch2);pointer-events:none;}
+.month-cell.is-today{background:#f0e4c0;outline:2px solid var(--red);outline-offset:-2px;}
+
+.cell-num{
+  font-family:'Cinzel',serif;font-weight:700;font-size:11px;
+  color:var(--ink);display:block;margin-bottom:3px;
+}
+.cell-num.today-num{
+  background:var(--red);color:var(--parchment);
+  border-radius:50%;width:20px;height:20px;
+  display:flex;align-items:center;justify-content:center;font-size:9px;
+}
+.event-pill{
+  display:block;font-family:'Cinzel',serif;font-size:7.5px;
+  padding:1px 4px;margin-bottom:2px;
+  border-left:2px solid var(--red);
+  background:rgba(122,21,21,.09);color:var(--ink);
+  cursor:pointer;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
+  letter-spacing:.02em;transition:background .12s;
+}
+.event-pill:hover{background:rgba(122,21,21,.22);}
+.event-pill.sys-pf  {border-color:#1a4a8a;background:rgba(26,74,138,.08);}
+.event-pill.sys-vam {border-color:#4a1a5a;background:rgba(74,26,90,.09);}
+.event-pill.sys-hw  {border-color:#1a4a1a;background:rgba(26,74,26,.09);}
+.event-pill.sys-mag {border-color:#1a1a6a;background:rgba(26,26,106,.09);}
+.event-pill.sys-hun {border-color:#6a3a0a;background:rgba(106,58,10,.09);}
+.event-pill.sys-d55 {border-color:#7a4a0a;background:rgba(122,74,10,.09);}
+.event-pill.sys-oth {border-color:#5a4a2a;background:rgba(90,74,42,.09);}
+.more-label{font-family:'Cinzel',serif;font-size:7px;color:var(--brd2);}
+
+/* WEEK VIEW */
+.week-header{display:grid;grid-template-columns:46px repeat(7,1fr);background:var(--ink);border-bottom:2px solid var(--brd);}
+.wk-gutter-hdr{border-right:1px solid #3a2000;}
+.wk-day-hdr{padding:5px 3px;text-align:center;border-right:1px solid #3a2000;}
+.wk-day-hdr:last-child{border-right:none;}
+.wk-day-name{font-family:'Cinzel',serif;font-size:8px;letter-spacing:.1em;text-transform:uppercase;color:var(--gold2);display:block;}
+.wk-day-num{font-family:'Cinzel',serif;font-weight:700;font-size:15px;color:var(--parchment);display:block;}
+.wk-day-num.is-today{
+  background:var(--red);border-radius:50%;
+  width:26px;height:26px;display:flex;align-items:center;justify-content:center;
+  font-size:11px;margin:0 auto;
+}
+.week-body{display:grid;grid-template-columns:46px repeat(7,1fr);max-height:420px;overflow-y:auto;}
+.time-col{border-right:1px solid var(--brd2);}
+.time-slot{height:48px;border-bottom:1px solid rgba(58,32,0,.13);padding:2px 4px;font-family:'Cinzel',serif;font-size:7px;color:var(--brd2);text-align:right;}
+.week-col{border-right:1px solid var(--brd2);position:relative;}
+.week-col:last-child{border-right:none;}
+.hour-cell{height:48px;border-bottom:1px solid rgba(58,32,0,.1);}
+.week-event{
+  position:absolute;left:1px;right:1px;
+  background:rgba(122,21,21,.11);border-left:2px solid var(--red);
+  padding:2px 4px;font-family:'Cinzel',serif;font-size:7.5px;
+  cursor:pointer;overflow:hidden;z-index:2;letter-spacing:.02em;
+  transition:background .12s;
+}
+.week-event:hover{background:rgba(122,21,21,.25);}
+.week-event.sys-pf  {border-color:#1a4a8a;background:rgba(26,74,138,.11);}
+.week-event.sys-vam {border-color:#4a1a5a;background:rgba(74,26,90,.11);}
+.week-event.sys-hw  {border-color:#1a4a1a;background:rgba(26,74,26,.11);}
+.week-event.sys-mag {border-color:#1a1a6a;background:rgba(26,26,106,.11);}
+.week-event.sys-hun {border-color:#6a3a0a;background:rgba(106,58,10,.11);}
+.week-event.sys-d55 {border-color:#7a4a0a;background:rgba(122,74,10,.11);}
+.week-event.sys-oth {border-color:#5a4a2a;background:rgba(90,74,42,.11);}
+
+/* DAY VIEW */
+.day-view-title{
+  background:var(--parch2);border-bottom:2px solid var(--brd2);
+  padding:8px 16px;font-family:'Cinzel',serif;font-weight:700;
+  font-size:14px;color:var(--ink);letter-spacing:.06em;
+}
+.day-body{display:grid;grid-template-columns:46px 1fr;max-height:450px;overflow-y:auto;}
+.day-col{position:relative;}
+.day-event{
+  position:absolute;left:2px;right:2px;
+  background:rgba(122,21,21,.1);border-left:3px solid var(--red);
+  padding:5px 7px;cursor:pointer;z-index:2;transition:background .12s;
+}
+.day-event:hover{background:rgba(122,21,21,.22);}
+.day-event.sys-pf  {border-color:#1a4a8a;background:rgba(26,74,138,.1);}
+.day-event.sys-vam {border-color:#4a1a5a;background:rgba(74,26,90,.1);}
+.day-event.sys-hw  {border-color:#1a4a1a;background:rgba(26,74,26,.1);}
+.day-event.sys-mag {border-color:#1a1a6a;background:rgba(26,26,106,.1);}
+.day-event.sys-hun {border-color:#6a3a0a;background:rgba(106,58,10,.1);}
+.day-event.sys-d55 {border-color:#7a4a0a;background:rgba(122,74,10,.1);}
+.day-event.sys-oth {border-color:#5a4a2a;background:rgba(90,74,42,.1);}
+.day-event-title{font-family:'Cinzel',serif;font-size:10px;font-weight:700;color:var(--ink);letter-spacing:.04em;}
+.day-event-meta{font-family:'IM Fell English',serif;font-size:10px;color:var(--muted);font-style:italic;margin-top:2px;}
+
+/* LEGEND */
+.legend{
+  display:flex;gap:8px;padding:6px 16px;
+  background:var(--parch2);border-top:2px solid var(--brd2);flex-wrap:wrap;
+}
+.legend-item{display:flex;align-items:center;gap:3px;font-family:'Cinzel',serif;font-size:7px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);}
+.legend-dot{width:7px;height:7px;border-radius:50%;flex-shrink:0;}
+
+/* EMPTY */
+.empty-day{padding:24px;text-align:center;font-family:'IM Fell English',serif;font-style:italic;font-size:14px;color:var(--muted);}
+
+/* MODAL */
+.modal-overlay{
+  display:none;position:fixed;inset:0;
+  background:rgba(10,5,0,.78);z-index:200;
+  align-items:center;justify-content:center;padding:16px;
+}
+.modal-overlay.open{display:flex;}
+.modal-box{
+  background:var(--parchment);border:3px solid var(--brd);
+  max-width:400px;width:100%;position:relative;
+  max-height:90vh;overflow-y:auto;
+  background-image:repeating-linear-gradient(0deg,transparent,transparent 24px,rgba(139,107,40,.06) 24px,rgba(139,107,40,.06) 25px);
+}
+.modal-box::before{
+  content:'';display:block;height:5px;
+  background:repeating-linear-gradient(90deg,var(--red) 0,var(--red) 8px,var(--gold2) 8px,var(--gold2) 10px,var(--red) 10px,var(--red) 18px,transparent 18px,transparent 22px);
+}
+.modal-header{background:var(--ink);color:var(--parchment);padding:12px 14px 10px;border-bottom:3px solid var(--gold2);}
+.modal-title{font-family:'Cinzel',serif;font-weight:900;font-size:17px;line-height:1.25;padding-right:24px;}
+.modal-system{font-family:'Cinzel',serif;font-size:9px;letter-spacing:.15em;text-transform:uppercase;color:var(--gold2);margin-top:5px;}
+.modal-body{padding:14px 16px 6px;}
+.modal-row{display:flex;gap:0;margin-bottom:8px;align-items:flex-start;}
+.modal-label{
+  font-family:'Cinzel',serif;font-size:8px;letter-spacing:.1em;
+  text-transform:uppercase;color:var(--brd2);
+  min-width:74px;padding-top:2px;
+  border-right:1px solid var(--brd2);padding-right:6px;margin-right:8px;
+}
+.modal-val{font-family:'IM Fell English',serif;font-size:13px;color:var(--ink);line-height:1.4;}
+.modal-divider{border:none;border-top:1px solid var(--brd2);margin:10px 0;position:relative;}
+.modal-divider::after{content:'✦';position:absolute;top:-8px;left:50%;transform:translateX(-50%);background:var(--parchment);padding:0 8px;font-size:11px;color:var(--gold2);}
+.modal-actions{display:flex;gap:6px;padding:8px 14px 14px;border-top:1px solid var(--brd2);flex-wrap:wrap;}
+.action-btn{
+  display:flex;align-items:center;justify-content:center;gap:5px;
+  padding:8px 10px;font-family:'Cinzel',serif;font-size:9px;
+  letter-spacing:.1em;text-transform:uppercase;cursor:pointer;
+  text-decoration:none;border:1.5px solid var(--brd2);
+  background:var(--parch2);color:var(--ink);transition:all .15s;flex:1;
+}
+.action-btn:hover{background:var(--ink);color:var(--gold2);border-color:var(--ink);}
+.action-btn.wa{border-color:#1a4a1a;color:#1a4a1a;}
+.action-btn.wa:hover{background:#1a4a1a;color:var(--parchment);}
+.action-btn.ig{border-color:#5a1a4a;color:#5a1a4a;}
+.action-btn.ig:hover{background:#5a1a4a;color:var(--parchment);}
+.close-btn{
+  position:absolute;top:8px;right:10px;
+  background:transparent;border:1px solid var(--gold2);
+  color:var(--gold2);width:22px;height:22px;
+  display:flex;align-items:center;justify-content:center;
+  font-size:13px;cursor:pointer;transition:all .15s;
+}
+.close-btn:hover{background:var(--gold2);color:var(--ink);}
+
+/* FOOTER */
+.site-footer{text-align:center;padding:12px 0 20px;font-family:'Cinzel',serif;font-size:8px;letter-spacing:.12em;text-transform:uppercase;color:#8a6a3a;}
+</style>
+</head>
+<body>
+
+<div class="page">
+
+  <header class="site-header">
+    <div class="site-title">La Ciudadela de los Confines</div>
+    <div class="site-sub">Lima 575, Ciudad Autónoma de Buenos Aires</div>
+    <span class="ornament">⚔ ✦ ⚔</span>
+  </header>
+
+  <div class="cal-card">
+
+    <!-- Esquinas decorativas -->
+    <div class="corner c-tl"><svg viewBox="0 0 32 32"><path d="M0,0 L32,0 L32,5 L5,5 L5,32 L0,32 Z" fill="#3a2000"/><path d="M5,5 L16,5 L5,16 Z" fill="#8a6a1a"/><circle cx="5" cy="5" r="3.5" fill="#c4a030"/></svg></div>
+    <div class="corner c-tr"><svg viewBox="0 0 32 32"><path d="M32,0 L0,0 L0,5 L27,5 L27,32 L32,32 Z" fill="#3a2000"/><path d="M27,5 L16,5 L27,16 Z" fill="#8a6a1a"/><circle cx="27" cy="5" r="3.5" fill="#c4a030"/></svg></div>
+    <div class="corner c-bl"><svg viewBox="0 0 32 32"><path d="M0,32 L0,0 L5,0 L5,27 L32,27 L32,32 Z" fill="#3a2000"/><path d="M5,27 L16,27 L5,16 Z" fill="#8a6a1a"/><circle cx="5" cy="27" r="3.5" fill="#c4a030"/></svg></div>
+    <div class="corner c-br"><svg viewBox="0 0 32 32"><path d="M32,32 L0,32 L0,27 L27,27 L27,0 L32,0 Z" fill="#3a2000"/><path d="M27,27 L16,27 L27,16 Z" fill="#8a6a1a"/><circle cx="27" cy="27" r="3.5" fill="#c4a030"/></svg></div>
+
+    <div class="cal-header">
+      <div>
+        <div class="hdr-logo">Agenda de Mesas</div>
+        <div class="hdr-sub">✦ Consultá disponibilidad y reservá tu lugar ✦</div>
+      </div>
+      <div class="month-nav">
+        <button class="nav-btn" id="prevBtn">&#8592;</button>
+        <span class="month-label" id="monthLabel"></span>
+        <button class="nav-btn" id="nextBtn">&#8594;</button>
+      </div>
+    </div>
+
+    <div class="toolbar">
+      <div class="view-tabs">
+        <button class="view-tab active" data-view="month">Mes</button>
+        <button class="view-tab" data-view="week">Semana</button>
+        <button class="view-tab" data-view="day">Día</button>
+      </div>
+      <button class="today-btn" id="todayBtn">✦ Hoy</button>
+    </div>
+
+    <div id="calBody">
+      <div class="status-msg">Convocando a los dados... ✦</div>
+    </div>
+
+    <div class="legend">
+      <div class="legend-item"><div class="legend-dot" style="background:#7a1515"></div>D&amp;D 5e</div>
+      <div class="legend-item"><div class="legend-dot" style="background:#7a4a0a"></div>D&amp;D 5.5e</div>
+      <div class="legend-item"><div class="legend-dot" style="background:#1a4a8a"></div>Pathfinder</div>
+      <div class="legend-item"><div class="legend-dot" style="background:#4a1a5a"></div>Vampiro</div>
+      <div class="legend-item"><div class="legend-dot" style="background:#1a4a1a"></div>Hombre Lobo</div>
+      <div class="legend-item"><div class="legend-dot" style="background:#1a1a6a"></div>Mago</div>
+      <div class="legend-item"><div class="legend-dot" style="background:#6a3a0a"></div>Hunter</div>
+      <div class="legend-item"><div class="legend-dot" style="background:#5a4a2a"></div>Otros</div>
+    </div>
+
+  </div><!-- .cal-card -->
+
+  <footer class="site-footer">✦ @laciudadela.dlc ✦ Lima 575, CABA ✦</footer>
+
+</div><!-- .page -->
+
+<!-- MODAL -->
+<div class="modal-overlay" id="modalOverlay">
+  <div class="modal-box">
+    <button class="close-btn" id="closeModal">&#10005;</button>
+    <div class="modal-header">
+      <div class="modal-title" id="mTitle"></div>
+      <div class="modal-system" id="mSystem"></div>
+    </div>
+    <div class="modal-body">
+      <div class="modal-row"><span class="modal-label">Fecha</span><span class="modal-val" id="mDate"></span></div>
+      <div class="modal-row"><span class="modal-label">Horario</span><span class="modal-val" id="mTime"></span></div>
+      <div class="modal-row" id="rowDM"><span class="modal-label">Director</span><span class="modal-val" id="mDM"></span></div>
+      <div class="modal-row" id="rowCupos"><span class="modal-label">Cupos</span><span class="modal-val" id="mCupos"></span></div>
+      <div class="modal-row" id="rowNivel"><span class="modal-label">Nivel</span><span class="modal-val" id="mNivel"></span></div>
+      <hr class="modal-divider">
+      <div class="modal-row" id="rowInfo"><span class="modal-label">Crónica</span><span class="modal-val" id="mInfo"></span></div>
+    </div>
+    <div class="modal-actions">
+      <a class="action-btn wa" id="mWA" href="#" target="_blank">⚔ WhatsApp</a>
+      <a class="action-btn ig" id="mIG" href="#" target="_blank">✦ Instagram</a>
+      <a class="action-btn" id="mMail" href="#" target="_blank">✉ Mail</a>
+    </div>
+  </div>
+</div>
+
+<!-- Config (con API key) -->
+<script src="config.js"></script>
+
+<script>
+// ============================================================
+// CONSTANTES Y UTILS
+// ============================================================
+const MES = ['Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre'];
+const DS  = ['Dom','Lun','Mar','Mié','Jue','Vie','Sáb'];
+const DL  = ['Domingo','Lunes','Martes','Miércoles','Jueves','Viernes','Sábado'];
+
+const SYSTEM_LABELS = {
+  'dnd':'D&D 5e','dnd55':'D&D 5.5e (2024)','pf':'Pathfinder 2e',
+  'vam':'Vampiro: La Mascarada','hw':'Hombre Lobo: El Apocalipsis',
+  'mag':'Mago: La Ascensión','hun':'Hunter: The Reckoning','oth':'Otro sistema'
+};
+
+const SYSTEM_KEYS = {
+  'd&d 5e':'dnd','d&d5e':'dnd','dnd 5e':'dnd','dnd5e':'dnd','dnd':'dnd',
+  'd&d 5.5':'dnd55','d&d5.5':'dnd55','dnd 5.5':'dnd55','dnd5.5':'dnd55','dnd55':'dnd55',
+  'pathfinder':'pf','pathfinder 2':'pf','pathfinder 2e':'pf','pf':'pf','pf2':'pf','pf2e':'pf',
+  'vampiro':'vam','vampire':'vam','vam':'vam',
+  'hombre lobo':'hw','werewolf':'hw','hw':'hw',
+  'mago':'mag','mage':'mag','mag':'mag',
+  'hunter':'hun','hun':'hun',
+};
+
+function sysClass(sys){ return sys && sys!=='dnd' ? 'sys-'+sys : ''; }
+function ft(h,m){ return String(h).padStart(2,'0')+':'+String(m||0).padStart(2,'0'); }
+function fdl(d){ return DL[d.getDay()]+' '+d.getDate()+' de '+MES[d.getMonth()]+' '+d.getFullYear(); }
+
+// ============================================================
+// PARSEO DE DESCRIPCIÓN
+// ============================================================
+function parseDesc(raw){
+  const out = {sistema:'',director:'',cupos:'',nivel:'',info:''};
+  if(!raw) return out;
+  const text = raw.replace(/<[^>]*>/g,'').replace(/&nbsp;/g,' ').replace(/&amp;/g,'&');
+  const lines = text.split(/\n/).map(l=>l.trim()).filter(Boolean);
+  lines.forEach(line=>{
+    const m = line.match(/^([^:]+):\s*(.+)$/);
+    if(!m) return;
+    const k = m[1].trim().toLowerCase();
+    const v = m[2].trim();
+    if(k==='sistema') out.sistema = v;
+    else if(k==='director' || k==='dm' || k==='narrador') out.director = v;
+    else if(k==='cupos') out.cupos = v;
+    else if(k==='nivel') out.nivel = v;
+    else if(k==='info' || k==='descripción' || k==='descripcion') out.info = v;
+  });
+  return out;
+}
+
+function resolveSystem(sysStr){
+  if(!sysStr) return 'oth';
+  const k = sysStr.toLowerCase().trim();
+  return SYSTEM_KEYS[k] || 'oth';
+}
+
+// ============================================================
+// GOOGLE CALENDAR API
+// ============================================================
+let cachedEvents = {};
+
+async function fetchEvents(year, month){
+  const cacheKey = year+'-'+month;
+  if(cachedEvents[cacheKey]) return cachedEvents[cacheKey];
+
+  const timeMin = new Date(year, month, 1).toISOString();
+  const timeMax = new Date(year, month+1, 0, 23, 59, 59).toISOString();
+  const calId   = encodeURIComponent(CIUDADELA_CONFIG.CALENDAR_ID);
+  const apiKey  = CIUDADELA_CONFIG.GOOGLE_API_KEY;
+
+  const url = `https://www.googleapis.com/calendar/v3/calendars/${calId}/events`
+    +`?key=${apiKey}`
+    +`&timeMin=${encodeURIComponent(timeMin)}`
+    +`&timeMax=${encodeURIComponent(timeMax)}`
+    +`&singleEvents=true&orderBy=startTime&maxResults=200`;
+
+  const resp = await fetch(url);
+  if(!resp.ok) throw new Error('Error '+resp.status);
+  const data = await resp.json();
+
+  const events = (data.items||[]).map(item=>{
+    const start  = new Date(item.start.dateTime || item.start.date);
+    const end    = new Date(item.end.dateTime   || item.end.date);
+    const dur    = Math.round((end-start)/60000);
+    const parsed = parseDesc(item.description||'');
+    const sys    = resolveSystem(parsed.sistema);
+    return {
+      id: item.id,
+      title: item.summary || '(Sin título)',
+      date: start,
+      h: start.getHours(),
+      mn: start.getMinutes(),
+      dur,
+      sys,
+      director: parsed.director,
+      cupos: parsed.cupos,
+      nivel: parsed.nivel,
+      info: parsed.info,
+    };
+  });
+
+  cachedEvents[cacheKey] = events;
+  return events;
+}
+
+// ============================================================
+// ESTADO
+// ============================================================
+const now = new Date();
+let cy   = now.getFullYear();
+let cm   = now.getMonth();
+let sel  = new Date(now);
+let view = 'month';
+let curEvents = [];
+
+// ============================================================
+// MODAL
+// ============================================================
+function openModal(ev){
+  document.getElementById('mTitle').textContent   = ev.title;
+  document.getElementById('mSystem').textContent  = SYSTEM_LABELS[ev.sys]||ev.sys;
+  document.getElementById('mDate').textContent    = fdl(ev.date);
+  document.getElementById('mTime').textContent    = ft(ev.h,ev.mn)+' hs';
+
+  const setRow = (rowId,valId,val)=>{
+    document.getElementById(rowId).style.display = val ? 'flex' : 'none';
+    document.getElementById(valId).textContent   = val||'';
+  };
+  setRow('rowDM','mDM',ev.director);
+  setRow('rowCupos','mCupos',ev.cupos);
+  setRow('rowNivel','mNivel',ev.nivel);
+  setRow('rowInfo','mInfo',ev.info);
+
+  const msg = encodeURIComponent('¡Buenas! Me interesa la mesa de '+ev.title+' el '+fdl(ev.date)+' a las '+ft(ev.h,ev.mn)+'hs.');
+  document.getElementById('mWA').href   = 'https://wa.me/'+CIUDADELA_CONFIG.WHATSAPP+'?text='+msg;
+  document.getElementById('mIG').href   = 'https://instagram.com/'+CIUDADELA_CONFIG.INSTAGRAM;
+  document.getElementById('mMail').href = 'mailto:'+CIUDADELA_CONFIG.EMAIL+'?subject=Consulta: '+ev.title+'&body='+decodeURIComponent(msg);
+
+  document.getElementById('modalOverlay').classList.add('open');
+}
+
+document.getElementById('closeModal').onclick = ()=>document.getElementById('modalOverlay').classList.remove('open');
+document.getElementById('modalOverlay').onclick = function(e){ if(e.target===this) this.classList.remove('open'); };
+
+// ============================================================
+// RENDER HELPERS
+// ============================================================
+function updLabel(){ document.getElementById('monthLabel').textContent = MES[cm]+' '+cy; }
+
+function makePill(ev){
+  const cls = sysClass(ev.sys);
+  return `<span class="event-pill ${cls}" data-id="${ev.id}">${ft(ev.h,ev.mn)} ${ev.title}</span>`;
+}
+
+function makeWeekEvent(ev){
+  const top = (ev.h-8)*48+(ev.mn/60)*48;
+  const ht  = Math.max(22,(ev.dur/60)*48);
+  return `<div class="week-event ${sysClass(ev.sys)}" style="top:${top}px;height:${ht}px;" data-id="${ev.id}"><b>${ft(ev.h,ev.mn)}</b><br>${ev.title}</div>`;
+}
+
+function makeDayEvent(ev){
+  const top = (ev.h-8)*48+(ev.mn/60)*48;
+  const ht  = Math.max(40,(ev.dur/60)*48);
+  return `<div class="day-event ${sysClass(ev.sys)}" style="top:${top}px;height:${ht}px;" data-id="${ev.id}">
+    <div class="day-event-title">${ft(ev.h,ev.mn)} — ${ev.title}</div>
+    <div class="day-event-meta">${SYSTEM_LABELS[ev.sys]||''}${ev.director?' · Dir: '+ev.director:''}${ev.cupos?' · Cupos: '+ev.cupos:''}</div>
+  </div>`;
+}
+
+function bindEvents(selector, evArr){
+  document.querySelectorAll(selector).forEach(el=>{
+    el.addEventListener('click',e=>{
+      e.stopPropagation();
+      const ev = evArr.find(e=>e.id===el.dataset.id);
+      if(ev) openModal(ev);
+    });
+  });
+}
+
+const HOURS = Array.from({length:14},(_,i)=>i+8);
+function timeColHTML(){ return HOURS.map(h=>`<div class="time-slot">${h}:00</div>`).join(''); }
+function hourCellsHTML(){ return HOURS.map(()=>`<div class="hour-cell"></div>`).join(''); }
+
+// ============================================================
+// RENDER MONTH
+// ============================================================
+function renderMonth(evs){
+  const fd  = new Date(cy,cm,1).getDay();
+  const dim = new Date(cy,cm+1,0).getDate();
+  const pd  = new Date(cy,cm,0).getDate();
+  let cells = [];
+  for(let i=fd-1;i>=0;i--) cells.push({d:pd-i,cur:false});
+  for(let d=1;d<=dim;d++) cells.push({d,cur:true});
+  while(cells.length%7!==0) cells.push({d:cells.length-dim-fd+1,cur:false});
+
+  let html = `<div class="day-headers">${DS.map(d=>`<div class="day-hdr">${d}</div>`).join('')}</div><div class="month-cells">`;
+
+  cells.forEach(c=>{
+    const isT = c.cur && c.d===now.getDate() && cm===now.getMonth() && cy===now.getFullYear();
+    const cls = 'month-cell'+(c.cur?'':' other-month')+(isT?' is-today':'');
+    const num = isT
+      ? `<span class="cell-num today-num">${c.d}</span>`
+      : `<span class="cell-num">${c.d}</span>`;
+    let pills = '';
+    if(c.cur){
+      const de = evs.filter(e=>e.date.getDate()===c.d);
+      de.slice(0,3).forEach(ev=>{ pills += makePill(ev); });
+      if(de.length>3) pills += `<span class="more-label">+${de.length-3} más</span>`;
+    }
+    html += `<div class="${cls}">${num}${pills}</div>`;
+  });
+  html += '</div>';
+
+  document.getElementById('calBody').innerHTML = html;
+  bindEvents('.event-pill', evs);
+  document.querySelectorAll('.month-cell:not(.other-month)').forEach(el=>{
+    el.addEventListener('click',()=>{ view='day'; document.querySelectorAll('.view-tab').forEach(t=>t.classList.toggle('active',t.dataset.view==='day')); render(); });
+  });
+}
+
+// ============================================================
+// RENDER WEEK
+// ============================================================
+function wkStart(d){ const dt=new Date(d); dt.setDate(dt.getDate()-dt.getDay()); return dt; }
+
+function renderWeek(evs){
+  const ws   = wkStart(sel);
+  const days = Array.from({length:7},(_,i)=>{ const d=new Date(ws); d.setDate(ws.getDate()+i); return d; });
+  const wEvs = [];
+  days.forEach(d=>{ evs.filter(e=>e.date.toDateString()===d.toDateString()).forEach(e=>wEvs.push(e)); });
+
+  let hdrs = `<div class="wk-gutter-hdr"></div>`;
+  days.forEach(d=>{
+    const isT = d.toDateString()===now.toDateString();
+    const num = isT ? `<span class="wk-day-num is-today">${d.getDate()}</span>` : `<span class="wk-day-num">${d.getDate()}</span>`;
+    hdrs += `<div class="wk-day-hdr"><span class="wk-day-name">${DS[d.getDay()]}</span>${num}</div>`;
+  });
+
+  const cols = days.map(d=>{
+    const de = wEvs.filter(e=>e.date.toDateString()===d.toDateString());
+    return `<div class="week-col">${hourCellsHTML()}${de.map(makeWeekEvent).join('')}</div>`;
+  }).join('');
+
+  document.getElementById('calBody').innerHTML =
+    `<div class="week-header">${hdrs}</div>
+     <div class="week-body">
+       <div class="time-col">${timeColHTML()}</div>
+       ${cols}
+     </div>`;
+  bindEvents('.week-event', wEvs);
+}
+
+// ============================================================
+// RENDER DAY
+// ============================================================
+function renderDay(evs){
+  const de = evs.filter(e=>e.date.toDateString()===sel.toDateString());
+  const empty = de.length===0 ? `<div class="empty-day">✦ No hay mesas convocadas para esta jornada ✦</div>` : '';
+  document.getElementById('calBody').innerHTML =
+    `<div class="day-view-title">✦ ${fdl(sel)}</div>
+     <div class="day-body">
+       <div class="time-col">${timeColHTML()}</div>
+       <div class="day-col">${hourCellsHTML()}${de.map(makeDayEvent).join('')}</div>
+     </div>${empty}`;
+  bindEvents('.day-event', de);
+}
+
+// ============================================================
+// RENDER PRINCIPAL (async)
+// ============================================================
+async function render(){
+  updLabel();
+  document.getElementById('calBody').innerHTML = `<div class="status-msg">Convocando a los dados... ✦</div>`;
+  try {
+    const evs = await fetchEvents(cy, cm);
+    curEvents = evs;
+
+    // Para semana/día también podríamos necesitar mes adyacente — aquí simplificamos
+    if(view==='month')     renderMonth(evs);
+    else if(view==='week') renderWeek(evs);
+    else                   renderDay(evs);
+  } catch(err){
+    document.getElementById('calBody').innerHTML =
+      `<div class="status-msg">⚔ No se pudo conectar con el calendario.<br><small>${err.message}</small></div>`;
+  }
+}
+
+// ============================================================
+// CONTROLES
+// ============================================================
+document.querySelectorAll('.view-tab').forEach(btn=>{
+  btn.addEventListener('click',()=>{
+    view = btn.dataset.view;
+    document.querySelectorAll('.view-tab').forEach(t=>t.classList.toggle('active',t===btn));
+    render();
+  });
+});
+
+document.getElementById('prevBtn').addEventListener('click',()=>{
+  if(view==='month'){ cm--; if(cm<0){cm=11;cy--;} }
+  else if(view==='week'){ sel=new Date(sel); sel.setDate(sel.getDate()-7); cm=sel.getMonth(); cy=sel.getFullYear(); }
+  else { sel=new Date(sel); sel.setDate(sel.getDate()-1); cm=sel.getMonth(); cy=sel.getFullYear(); }
+  render();
+});
+
+document.getElementById('nextBtn').addEventListener('click',()=>{
+  if(view==='month'){ cm++; if(cm>11){cm=0;cy++;} }
+  else if(view==='week'){ sel=new Date(sel); sel.setDate(sel.getDate()+7); cm=sel.getMonth(); cy=sel.getFullYear(); }
+  else { sel=new Date(sel); sel.setDate(sel.getDate()+1); cm=sel.getMonth(); cy=sel.getFullYear(); }
+  render();
+});
+
+document.getElementById('todayBtn').addEventListener('click',()=>{
+  cm=now.getMonth(); cy=now.getFullYear(); sel=new Date(now); render();
+});
+
+// Arrancar
+render();
+</script>
+</body>
+</html>
