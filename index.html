@@ -388,30 +388,87 @@ function fdl(d){ return DL[d.getDay()]+' '+d.getDate()+' de '+MES[d.getMonth()]+
 
 // ============================================================
 // PARSEO DE DESCRIPCIÓN
+// Soporta el formato real del calendario de la Ciudadela:
+//   Nombre de la mesa: ...
+//   Juego: ...
+//   Modalidad: ...
+//   Narrador: ...
+//   Sinopsis: ... (puede ser multilínea)
+//   Cantidad de jugador: ...
+//   Observaciones sobre la mesa: ...
+//   Jugadores: ...
 // ============================================================
 function parseDesc(raw){
   const out = {sistema:'',director:'',cupos:'',nivel:'',info:''};
   if(!raw) return out;
-  const text = raw.replace(/<[^>]*>/g,'').replace(/&nbsp;/g,' ').replace(/&amp;/g,'&');
-  const lines = text.split(/\n/).map(l=>l.trim()).filter(Boolean);
+
+  // Limpiar HTML
+  const text = raw
+    .replace(/<br\s*\/?>/gi, '\n')
+    .replace(/<[^>]*>/g,'')
+    .replace(/&nbsp;/g,' ')
+    .replace(/&amp;/g,'&')
+    .replace(/&quot;/g,'"')
+    .replace(/&#39;/g,"'");
+
+  const lines = text.split(/\n/).map(l=>l.trim());
+
+  // Extraer campos clave:valor (soporta valores multilínea para Sinopsis)
+  let currentKey = null;
+  let currentVal = [];
+  const fields = {};
+
   lines.forEach(line=>{
-    const m = line.match(/^([^:]+):\s*(.+)$/);
-    if(!m) return;
-    const k = m[1].trim().toLowerCase();
-    const v = m[2].trim();
-    if(k==='sistema') out.sistema = v;
-    else if(k==='director' || k==='dm' || k==='narrador') out.director = v;
-    else if(k==='cupos') out.cupos = v;
-    else if(k==='nivel') out.nivel = v;
-    else if(k==='info' || k==='descripción' || k==='descripcion') out.info = v;
+    const m = line.match(/^([A-Za-záéíóúÁÉÍÓÚñÑ\s]+):\s*(.*)$/);
+    if(m){
+      if(currentKey) fields[currentKey] = currentVal.join(' ').trim();
+      currentKey = m[1].trim().toLowerCase();
+      currentVal = [m[2].trim()];
+    } else if(currentKey && line){
+      currentVal.push(line);
+    }
   });
+  if(currentKey) fields[currentKey] = currentVal.join(' ').trim();
+
+  // Mapear campos al modelo interno
+  out.sistema  = fields['juego'] || fields['sistema'] || fields['juego de rol'] || '';
+  out.director = fields['narrador'] || fields['director'] || fields['dm'] || fields['game master'] || '';
+  out.nivel    = fields['modalidad'] || fields['nivel'] || fields['observaciones sobre la mesa'] || fields['observaciones'] || '';
+  out.info     = fields['sinopsis'] || fields['descripcion'] || fields['descripción'] || fields['info'] || '';
+
+  // Cupos: "Cantidad de jugador: mínimo 3 máximo 6" → "3–6"
+  const cuposRaw = fields['cantidad de jugador'] || fields['cantidad de jugadores'] || fields['cupos'] || '';
+  if(cuposRaw){
+    const nums = cuposRaw.match(/\d+/g);
+    if(nums && nums.length>=2) out.cupos = nums[0]+'–'+nums[nums.length-1]+' jugadores';
+    else if(nums && nums.length===1) out.cupos = 'hasta '+nums[0]+' jugadores';
+    else out.cupos = cuposRaw;
+  }
+
   return out;
 }
 
 function resolveSystem(sysStr){
   if(!sysStr) return 'oth';
   const k = sysStr.toLowerCase().trim();
-  return SYSTEM_KEYS[k] || 'oth';
+  // Buscar coincidencia parcial si no hay exacta
+  if(SYSTEM_KEYS[k]) return SYSTEM_KEYS[k];
+  for(const [key,val] of Object.entries(SYSTEM_KEYS)){
+    if(k.includes(key) || key.includes(k)) return val;
+  }
+  return 'oth';
+}
+
+// Extraer sistema del título si no está en la descripción
+// Formato habitual: "Nombre de campaña- Sistema" o "Nombre- Sistema"
+function systemFromTitle(title){
+  if(!title) return null;
+  const parts = title.split(/[-–—]/);
+  if(parts.length>=2){
+    const last = parts[parts.length-1].trim();
+    return resolveSystem(last);
+  }
+  return null;
 }
 
 // ============================================================
@@ -443,7 +500,8 @@ async function fetchEvents(year, month){
     const end    = new Date(item.end.dateTime   || item.end.date);
     const dur    = Math.round((end-start)/60000);
     const parsed = parseDesc(item.description||'');
-    const sys    = resolveSystem(parsed.sistema);
+    const sysFromDesc = resolveSystem(parsed.sistema);
+    const sys = sysFromDesc !== 'oth' ? sysFromDesc : (systemFromTitle(item.summary) || 'oth');
     return {
       id: item.id,
       title: item.summary || '(Sin título)',
