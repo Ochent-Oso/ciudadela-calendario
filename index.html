@@ -989,12 +989,10 @@ function renderAgenda(evs){
   // Filter events to range, then apply user filters
   const rangeEvs=applyFilters(evs.filter(e=>e.date>=start&&e.date<=end));
 
-  // Build/refresh filter UI with counts from RANGE (before user filter)
+  // Counts from full range (no user filter applied)
   const rangeAll=evs.filter(e=>e.date>=start&&e.date<=end);
   const counts=countsBySys(rangeAll);
-  buildSidebarFilters(counts);
-  buildSidebarDays();
-  buildMobileFilters(counts);
+  updateFilterCounts(counts);
   updateFilterBadge();
 
   if(rangeEvs.length===0){
@@ -1078,6 +1076,8 @@ async function loadAndRender(){
     });
     const results=await Promise.all(fetches);
     allLoadedEvents=results.flat();
+    const counts=countsBySys(allLoadedEvents.filter(e=>{const {start,end}=getDateRange();return e.date>=start&&e.date<=end;}));
+    buildAllFilterUI(counts);
     renderAgenda(allLoadedEvents);
   } catch(err){
     document.getElementById('agendaBody').innerHTML='<div class="agenda-loading">⚔ No se pudo conectar con el calendario.<br><small>'+err.message+'</small></div>';
@@ -1114,33 +1114,110 @@ loadAndRender();
 
 // ── FILTER STATE ──────────────────────────────────────
 const SYSTEMS = [
-  {id:'dnd',  label:'D&D 5e',       dot:'#7a1515'},
-  {id:'d55',  label:'D&D 5.5e',     dot:'#7a4a0a'},
-  {id:'pf',   label:'Pathfinder',   dot:'#1a4a8a'},
-  {id:'vam',  label:'Vampiro',      dot:'#4a1a5a'},
-  {id:'hw',   label:'Hombre Lobo',  dot:'#1a4a1a'},
-  {id:'mag',  label:'Mago',         dot:'#1a1a6a'},
-  {id:'hun',  label:'Hunter',       dot:'#6a3a0a'},
-  {id:'oth',  label:'Otro',         dot:'#555'},
+  {id:'dnd', label:'D&D 5e',      dot:'#7a1515'},
+  {id:'d55', label:'D&D 5.5e',    dot:'#7a4a0a'},
+  {id:'pf',  label:'Pathfinder',  dot:'#1a4a8a'},
+  {id:'vam', label:'Vampiro',     dot:'#4a1a5a'},
+  {id:'hw',  label:'Hombre Lobo', dot:'#1a4a1a'},
+  {id:'mag', label:'Mago',        dot:'#1a1a6a'},
+  {id:'hun', label:'Hunter',      dot:'#6a3a0a'},
+  {id:'oth', label:'Otro',        dot:'#555'},
 ];
-const DAYS = ['Lun','Mar','Mié','Jue','Vie','Sáb','Dom'];
-const DAYS_IDX = [1,2,3,4,5,6,0]; // Mon=1...Sun=0 in JS
+const DAYS_LABELS = ['Lun','Mar','Mié','Jue','Vie','Sáb','Dom'];
+const DAYS_JS     = [1,2,3,4,5,6,0]; // JS getDay() values
 
-let activeSys  = new Set(); // empty = all
-let activeDays = new Set(); // empty = all
+let activeSys  = new Set();
+let activeDays = new Set();
+
+function applyFilters(evs) {
+  return evs.filter(e => {
+    const sysOk  = activeSys.size  === 0 || activeSys.has(e.sys);
+    const dayOk  = activeDays.size === 0 || activeDays.has(e.date.getDay());
+    return sysOk && dayOk;
+  });
+}
 
 function countsBySys(evs) {
   const c = {};
   SYSTEMS.forEach(s => c[s.id] = 0);
-  evs.forEach(e => { if(c[e.sys]!==undefined) c[e.sys]++; else c['oth']++; });
+  evs.forEach(e => { c[e.sys] !== undefined ? c[e.sys]++ : c['oth']++; });
   return c;
 }
 
-function applyFilters(evs) {
-  return evs.filter(e => {
-    const sysOk = activeSys.size === 0 || activeSys.has(e.sys);
-    const dayOk = activeDays.size === 0 || activeDays.has(e.date.getDay());
-    return sysOk && dayOk;
+// Render filter UIs (called once after load, then on navigate)
+function buildAllFilterUI(counts) {
+  buildSysUI('sidebarSysFilters', counts);
+  buildDayUI('sidebarDayFilters');
+  buildSysUI('mobileSysFilters', counts);
+  buildDayUI('mobileDayFilters');
+}
+
+function buildSysUI(containerId, counts) {
+  const el = document.getElementById(containerId);
+  if(!el) return;
+  el.innerHTML = SYSTEMS.map(s => {
+    const isActive = activeSys.has(s.id);
+    return `<div class="filter-item${isActive?' active':''}" data-sys="${s.id}">
+      <div class="filter-dot" style="background:${s.dot}"></div>
+      <span class="filter-label">${s.label}</span>
+      <span class="filter-count">${counts[s.id]||0}</span>
+      <div class="filter-check"></div>
+    </div>`;
+  }).join('');
+
+  // Event delegation on container
+  el.onclick = function(e) {
+    const item = e.target.closest('.filter-item');
+    if(!item) return;
+    const id = item.dataset.sys;
+    if(activeSys.has(id)) activeSys.delete(id);
+    else activeSys.add(id);
+    item.classList.toggle('active', activeSys.has(id));
+    // Sync the other instance
+    syncOtherSys(containerId, id);
+    reRender();
+  };
+}
+
+function buildDayUI(containerId) {
+  const el = document.getElementById(containerId);
+  if(!el) return;
+  el.innerHTML = DAYS_LABELS.map((d,i) => {
+    const dayVal = DAYS_JS[i];
+    const isActive = activeDays.has(dayVal);
+    return `<span class="day-pill${isActive?' active':''}" data-day="${dayVal}">${d}</span>`;
+  }).join('');
+
+  el.onclick = function(e) {
+    const pill = e.target.closest('.day-pill');
+    if(!pill) return;
+    const day = parseInt(pill.dataset.day);
+    if(activeDays.has(day)) activeDays.delete(day);
+    else activeDays.add(day);
+    pill.classList.toggle('active', activeDays.has(day));
+    syncOtherDay(containerId, day);
+    reRender();
+  };
+}
+
+function syncOtherSys(sourceId, sysId) {
+  const otherId = sourceId === 'sidebarSysFilters' ? 'mobileSysFilters' : 'sidebarSysFilters';
+  const other = document.querySelector(`#${otherId} [data-sys="${sysId}"]`);
+  if(other) other.classList.toggle('active', activeSys.has(sysId));
+}
+
+function syncOtherDay(sourceId, day) {
+  const otherId = sourceId === 'sidebarDayFilters' ? 'mobileDayFilters' : 'sidebarDayFilters';
+  const other = document.querySelector(`#${otherId} [data-day="${day}"]`);
+  if(other) other.classList.toggle('active', activeDays.has(day));
+}
+
+function updateFilterCounts(counts) {
+  // Just update the count spans without rebuilding the whole UI
+  SYSTEMS.forEach(s => {
+    document.querySelectorAll(`[data-sys="${s.id}"] .filter-count`).forEach(el => {
+      el.textContent = counts[s.id]||0;
+    });
   });
 }
 
@@ -1150,98 +1227,44 @@ function updateFilterBadge() {
   const btn   = document.getElementById('mobileFilterBtn');
   const lbl   = document.getElementById('mobileActiveLabel');
   const bar   = document.getElementById('filterActiveBar');
-  if(badge) {
-    badge.textContent = total;
-    badge.classList.toggle('show', total > 0);
-  }
-  if(btn) btn.classList.toggle('has-active', total > 0);
-
-  // Active label
-  const parts = [];
-  if(activeSys.size)  parts.push(SYSTEMS.filter(s=>activeSys.has(s.id)).map(s=>s.label).join(', '));
-  if(activeDays.size) parts.push(DAYS.filter((_,i)=>activeDays.has(DAYS_IDX[i])).join(', '));
-  const txt = parts.join(' · ');
+  if(badge) { badge.textContent = total; badge.classList.toggle('show', total>0); }
+  if(btn)   btn.classList.toggle('has-active', total>0);
+  const sysPart  = SYSTEMS.filter(s=>activeSys.has(s.id)).map(s=>s.label).join(', ');
+  const dayPart  = DAYS_LABELS.filter((_,i)=>activeDays.has(DAYS_JS[i])).join(', ');
+  const txt = [sysPart,dayPart].filter(Boolean).join(' · ');
   if(lbl) lbl.textContent = txt;
-  if(bar) {
-    bar.textContent = total ? 'Filtrando: '+txt : '';
-    bar.classList.toggle('show', total > 0);
-  }
+  if(bar) { bar.textContent = total ? 'Filtrando: '+txt : ''; bar.classList.toggle('show',total>0); }
 }
 
-// Build sidebar sys filters
-function buildSidebarFilters(counts) {
-  const wrap = document.getElementById('sidebarSysFilters');
-  if(!wrap) return;
-  wrap.innerHTML = SYSTEMS.map(s => {
-    const active = activeSys.has(s.id) ? ' active' : '';
-    return `<div class="filter-item${active}" data-sys="${s.id}" onclick="toggleSys('${s.id}','sidebar')">
-      <div class="filter-dot" style="background:${s.dot}"></div>
-      <span class="filter-label">${s.label}</span>
-      <span class="filter-count">${counts[s.id]||0}</span>
-      <div class="filter-check"></div>
-    </div>`;
-  }).join('');
-}
-
-function buildSidebarDays() {
-  const wrap = document.getElementById('sidebarDayFilters');
-  if(!wrap) return;
-  wrap.innerHTML = DAYS.map((d,i) => {
-    const active = activeDays.has(DAYS_IDX[i]) ? ' active' : '';
-    return `<span class="day-pill${active}" data-day="${DAYS_IDX[i]}" onclick="toggleDay(${DAYS_IDX[i]},'sidebar')">${d}</span>`;
-  }).join('');
-}
-
-function buildMobileFilters(counts) {
-  const swrap = document.getElementById('mobileSysFilters');
-  if(swrap) swrap.innerHTML = SYSTEMS.map(s => {
-    const active = activeSys.has(s.id) ? ' active' : '';
-    return `<div class="filter-item${active}" data-sys="${s.id}" onclick="toggleSys('${s.id}','mobile')">
-      <div class="filter-dot" style="background:${s.dot}"></div>
-      <span class="filter-label">${s.label}</span>
-      <span class="filter-count">${counts[s.id]||0}</span>
-      <div class="filter-check"></div>
-    </div>`;
-  }).join('');
-
-  const dwrap = document.getElementById('mobileDayFilters');
-  if(dwrap) dwrap.innerHTML = DAYS.map((d,i) => {
-    const active = activeDays.has(DAYS_IDX[i]) ? ' active' : '';
-    return `<span class="day-pill${active}" data-day="${DAYS_IDX[i]}" onclick="toggleDay(${DAYS_IDX[i]},'mobile')">${d}</span>`;
-  }).join('');
-}
-
-function toggleSys(id, ctx) {
-  if(activeSys.has(id)) activeSys.delete(id);
-  else activeSys.add(id);
-  syncFiltersAndRender(ctx);
-}
-
-function toggleDay(day, ctx) {
-  if(activeDays.has(day)) activeDays.delete(day);
-  else activeDays.add(day);
-  syncFiltersAndRender(ctx);
-}
-
-function syncFiltersAndRender(ctx) {
+function reRender() {
   updateFilterBadge();
-  // Rebuild both UIs to stay in sync
-  const counts = countsBySys(allLoadedEvents);
-  buildSidebarFilters(counts);
-  buildSidebarDays();
-  buildMobileFilters(counts);
-  // Re-render agenda with filters
   renderAgenda(allLoadedEvents);
 }
 
-// Mobile panel toggle
-const mobileBtn = document.getElementById('mobileFilterBtn');
-const mobilePanel = document.getElementById('mobileFilterPanel');
-if(mobileBtn) mobileBtn.addEventListener('click', () => {
-  mobilePanel.classList.toggle('open');
+// Clear buttons
+document.getElementById('sidebarClearSys')?.addEventListener('click', () => {
+  activeSys.clear();
+  document.querySelectorAll('[data-sys]').forEach(el=>el.classList.remove('active'));
+  reRender();
+});
+document.getElementById('sidebarClearDays')?.addEventListener('click', () => {
+  activeDays.clear();
+  document.querySelectorAll('[data-day]').forEach(el=>el.classList.remove('active'));
+  reRender();
 });
 
+// Mobile panel
+const mobileBtn   = document.getElementById('mobileFilterBtn');
+const mobilePanel = document.getElementById('mobileFilterPanel');
+if(mobileBtn) mobileBtn.addEventListener('click', () => mobilePanel.classList.toggle('open'));
+
 document.getElementById('mobileApplyBtn')?.addEventListener('click', () => {
+  mobilePanel.classList.remove('open');
+});
+document.getElementById('mobileResetBtn')?.addEventListener('click', () => {
+  activeSys.clear(); activeDays.clear();
+  document.querySelectorAll('[data-sys],[data-day]').forEach(el=>el.classList.remove('active'));
+  reRender();
   mobilePanel.classList.remove('open');
 });
 document.getElementById('mobileResetBtn')?.addEventListener('click', () => {
