@@ -1166,22 +1166,6 @@ function buildSysUI(containerId, counts) {
       <div class="filter-check"></div>
     </div>`;
   }).join('');
-
-  // Remove old listener and add fresh one
-  const newEl = el.cloneNode(true);
-  el.parentNode.replaceChild(newEl, el);
-  newEl.addEventListener('click', function(e) {
-    const item = e.target.closest('.filter-item');
-    if(!item) return;
-    const id = item.dataset.sys;
-    if(activeSys.has(id)) activeSys.delete(id);
-    else activeSys.add(id);
-    newEl.querySelectorAll('.filter-item').forEach(fi => {
-      fi.classList.toggle('active', activeSys.has(fi.dataset.sys));
-    });
-    syncOtherSys(containerId, id);
-    reRender();
-  });
 }
 
 function buildDayUI(containerId) {
@@ -1192,38 +1176,62 @@ function buildDayUI(containerId) {
     const isActive = activeDays.has(dayVal);
     return `<span class="day-pill${isActive?' active':''}" data-day="${dayVal}">${d}</span>`;
   }).join('');
+}
 
-  const newEl2 = el.cloneNode(true);
-  el.parentNode.replaceChild(newEl2, el);
-  newEl2.addEventListener('click', function(e) {
-    const pill = e.target.closest('.day-pill');
-    if(!pill) return;
-    const day = parseInt(pill.dataset.day);
+
+// ── STATIC EVENT DELEGATION (attached once, never removed) ───────────────────
+// Sidebar sys
+document.addEventListener('click', function(e) {
+  // Sidebar sys filter
+  const sysItem = e.target.closest('#sidebarSysFilters .filter-item');
+  if(sysItem) {
+    const id = sysItem.dataset.sys;
+    if(activeSys.has(id)) activeSys.delete(id);
+    else activeSys.add(id);
+    document.querySelectorAll('[data-sys="'+id+'"]').forEach(el => {
+      el.classList.toggle('active', activeSys.has(id));
+    });
+    reRender();
+    return;
+  }
+  // Sidebar day filter
+  const dayPillSidebar = e.target.closest('#sidebarDayFilters .day-pill');
+  if(dayPillSidebar) {
+    const day = parseInt(dayPillSidebar.dataset.day);
     if(activeDays.has(day)) activeDays.delete(day);
     else activeDays.add(day);
-    newEl2.querySelectorAll('.day-pill').forEach(p => {
-      p.classList.toggle('active', activeDays.has(parseInt(p.dataset.day)));
+    document.querySelectorAll('[data-day="'+day+'"]').forEach(el => {
+      el.classList.toggle('active', activeDays.has(day));
     });
-    syncOtherDay(containerId, day);
     reRender();
-  });
-}
+    return;
+  }
+  // Mobile sys filter
+  const mobileSysItem = e.target.closest('#mobileSysFilters .filter-item');
+  if(mobileSysItem) {
+    const id = mobileSysItem.dataset.sys;
+    if(activeSys.has(id)) activeSys.delete(id);
+    else activeSys.add(id);
+    document.querySelectorAll('[data-sys="'+id+'"]').forEach(el => {
+      el.classList.toggle('active', activeSys.has(id));
+    });
+    reRender();
+    return;
+  }
+  // Mobile day filter
+  const dayPillMobile = e.target.closest('#mobileDayFilters .day-pill');
+  if(dayPillMobile) {
+    const day = parseInt(dayPillMobile.dataset.day);
+    if(activeDays.has(day)) activeDays.delete(day);
+    else activeDays.add(day);
+    document.querySelectorAll('[data-day="'+day+'"]').forEach(el => {
+      el.classList.toggle('active', activeDays.has(day));
+    });
+    reRender();
+    return;
+  }
+});
 
-function syncOtherSys(sourceId, sysId) {
-  try {
-    const otherId = sourceId === 'sidebarSysFilters' ? 'mobileSysFilters' : 'sidebarSysFilters';
-    const other = document.querySelector('#'+otherId+' [data-sys="'+sysId+'"]');
-    if(other) other.classList.toggle('active', activeSys.has(sysId));
-  } catch(e) {}
-}
-
-function syncOtherDay(sourceId, day) {
-  try {
-    const otherId = sourceId === 'sidebarDayFilters' ? 'mobileDayFilters' : 'sidebarDayFilters';
-    const other = document.querySelector('#'+otherId+' [data-day="'+day+'"]');
-    if(other) other.classList.toggle('active', activeDays.has(day));
-  } catch(e) {}
-}
 
 function updateFilterCounts(counts) {
   // Just update the count spans without rebuilding the whole UI
